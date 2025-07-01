@@ -1,0 +1,8 @@
+package org.com.pangolin.dominio.enums;
+
+public enum TipoProdutoEnum {
+    PRE_FIXADO_DISTRIBUICAO_PARCIAL,
+    PRE_FIXADO_DISTRIBUICAO_INTEGRAL,
+    POS_FIXADO_DISTRIBUICAO_PARCIAL,
+    POS_FIXADO_DISTRIBUICAO_INTEGRAL
+}
