@@ -1,0 +1,153 @@
+classDiagram
+    direction TB
+
+    namespace Aplicacao {
+        class CriacaoDeCarteiraService {
+            +ICarteiraRepository carteiraRepository
+            +CarteiraFactory carteiraFactory
+            +IGeradorDeProximoIdCarteira geradorIdCarteira
+            +handle(ComandoCriarCarteira) UUID
+        }
+
+        class ComandoCriarCarteira {
+            <<Record>>
+            +TipoProdutoEnum tipoProduto
+            +List~ParcelaComando~ parcelas
+        }
+
+        class ParcelaComando {
+            <<DTO>>
+        }
+    }
+
+    namespace Dominio_Fabricas {
+        class CarteiraFactory {
+            -Map~TipoProdutoEnum, ConfiguracaoDeProduto~ mapaDeConfiguracoes
+            +criarCarteira(ComandoCriarCarteira) Carteira
+        }
+
+        class ConfiguracaoDeProduto {
+            <<Record>>
+            +IEstrategiaDeCriacaoDeParcela
+            +IEstrategiaDeDistribuicaoDePagamento
+            +IRecalculoDeCronogramaStrategy
+        }
+    }
+
+    namespace Dominio_AgregadoCarteira {
+class Carteira {
+<<Aggregate Root>>
+-CarteiraId id
+-List~Parcela~ parcelas
+-IServicoCalculoEncargos servicoEncargos
+-IEstrategiaDeCriacaoDeParcela estrategiaDeCriacao
+-IEstrategiaDeDistribuicaoDePagamento estrategiaDeDistribuicao
+#Carteira(id, politicas...)
++gerarCronogramaAPartirDeComandos(comandos)
++pagarParcelaUnica(numero, pagamento)
++amortizarPorMontante(pagamento)
+}
+
+class Parcela {
+<<Entity>>
+-final ParcelaId id
+-final int numero
+-final LocalDate dataVencimento
+-IEstadoParcela estado
+-List~ComponenteFinanceiro~ componentes
+#Parcela(id, numero, ...)
++pagar(pagamento, estrategia, dataRef)
++cancelar(dataRef)
++getDiasDeAtraso(dataRef) long
++getDiasParaAntecipacao(dataRef) long
++getBaseDeCalculoParaMulta() ValorMonetario
+}
+
+class ComponenteFinanceiro {
+-TipoComponente tipo
+-ValorMonetario valorOriginal
+-ValorMonetario saldoDevedor
+}
+}
+
+namespace Dominio_EstadoParcela {
+class IEstadoParcela {
+<<Interface>>
++pagar(parcela, pagamento, estrategia, dataRef)
++cancelar(parcela, dataRef)
++estornar(parcela, memorial)
++getValorAtualizado(parcela, dataRef)
++getStatus() StatusParcelaEnum
+}
+class EstadoAberta
+class EstadoVencida
+class EstadoPaga
+class EstadoCancelada
+class ComportamentoDePagamentoPadrao {
+<<Helper>>
+}
+    }
+
+namespace Dominio_ServicosEstrategias {
+class IServicoCalculoEncargos { <<Interface>> }
+class ServicoCalculoEncargos
+
+class IEstrategiaDeCriacaoDeParcela { <<Interface>> }
+class EstrategiaCriacaoPreFixada
+
+class IGeradorDeSequencia { <<Interface>> }
+class GeradorSequenciaComPrefixo
+
+class IEstrategiaDeDistribuicaoDePagamento { <<Interface>> }
+class JurosPrimeiroDistribuicaoStrategy
+}
+
+namespace Dominio_ValueObjects {
+class CarteiraId { <<VO>> }
+class ParcelaId { <<VO>> }
+class ValorMonetario { <<VO>> }
+class Taxa { <<VO>> }
+class Pagamento { <<VO>> }
+class ParametrosCalculoEncargos { <<VO>> }
+class MemorialDeAmortizacao { <<VO>> }
+    }
+
+namespace Infraestrutura {
+class IGeradorDeProximoIdCarteira { <<Interface>> }
+class GeradorDeIdCarteiraPostgres
+}
+
+%% --- Relacionamentos Principais ---
+
+CriacaoDeCarteiraService --> CarteiraFactory : "usa"
+CriacaoDeCarteiraService --> IGeradorDeProximoIdCarteira : "usa"
+
+CarteiraFactory --> Carteira : "cria"
+CarteiraFactory o-- ConfiguracaoDeProduto : "usa receitas"
+ConfiguracaoDeProduto o-- IEstrategiaDeCriacaoDeParcela
+ConfiguracaoDeProduto o-- IEstrategiaDeDistribuicaoDePagamento
+ConfiguracaoDeProduto o-- IRecalculoDeCronogramaStrategy
+
+Carteira "1" *-- "0..*" Parcela : "contém"
+Carteira --> IEstrategiaDeCriacaoDeParcela : "usa"
+Carteira --> IGeradorDeSequencia : "usa"
+
+Parcela "1" *-- "1..*" ComponenteFinanceiro : "é composta por"
+Parcela -- "1" IEstadoParcela : "tem um"
+
+IEstadoParcela <|.. EstadoAberta
+IEstadoParcela <|.. EstadoVencida
+IEstadoParcela <|.. EstadoPaga
+IEstadoParcela <|.. EstadoCancelada
+
+EstadoAberta ..> EstadoVencida : "transiciona para"
+EstadoAberta ..> EstadoPaga : "transiciona para"
+EstadoAberta ..> EstadoCancelada : "transiciona para"
+
+EstadoVencida --> IServicoCalculoEncargos : "usa para calcular"
+EstadoAberta -- ComportamentoDePagamentoPadrao : "usa"
+EstadoVencida -- ComportamentoDePagamentoPadrao : "usa"
+
+ServicoCalculoEncargos ..|> IServicoCalculoEncargos
+EstrategiaCriacaoPreFixada ..|> IEstrategiaDeCriacaoDeParcela
+GeradorDeIdCarteiraPostgres ..|> IGeradorDeProximoIdCarteira
