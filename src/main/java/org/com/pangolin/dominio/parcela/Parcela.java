@@ -4,8 +4,11 @@ import org.com.pangolin.dominio.amortizacao.IAmortizacaoStrategy;
 import org.com.pangolin.dominio.amortizacao.MemorialDeAmortizacao;
 import org.com.pangolin.dominio.core.Entidade;
 import org.com.pangolin.dominio.core.Resultado;
+import org.com.pangolin.dominio.core.validacoes.Validador;
 import org.com.pangolin.dominio.enums.StatusParcelaEnum;
+import org.com.pangolin.dominio.excecoes.RegraDeNegocioException;
 import org.com.pangolin.dominio.parcela.componentes.ComponenteFinanceiro;
+import org.com.pangolin.dominio.parcela.componentes.ComponenteFinanceiroValidadorFactory;
 import org.com.pangolin.dominio.parcela.componentes.TipoComponente;
 import org.com.pangolin.dominio.parcela.estados.EstadoAberta;
 import org.com.pangolin.dominio.parcela.estados.EstadoVencida;
@@ -79,6 +82,24 @@ public final  class Parcela extends Entidade<Integer, ParcelaId> implements Seri
             throw new IllegalArgumentException("A parcela deve ser criada com pelo menos um componente financeiro.");
         }
 
+        // Valida se todos os componentes financeiros são válidos.
+        // Obtém o validador da nossa fábrica.
+        Validador<ComponenteFinanceiro> validadorComponente = ComponenteFinanceiroValidadorFactory.validador();
+
+        // Itera sobre os componentes recebidos e valida cada um deles.
+        for (ComponenteFinanceiro componente : componentesFinanceirosIniciais) {
+            Resultado<ComponenteFinanceiro, List<ErroDeValidacao>> resultado = validadorComponente.validar(componente);
+
+            if (resultado.isErro()) {
+                // Se qualquer componente for inválido, a criação da Parcela falha imediatamente.
+                String errosConcatenados = resultado.getErro().orElse(List.of()).stream()
+                        .map(ErroDeValidacao::mensagem)
+                        .collect(Collectors.joining("; "));
+                throw new RegraDeNegocioException(
+                        "Componente financeiro inválido na criação da parcela. Erros: " + errosConcatenados
+                );
+            }
+        }
         this.parcelaId = id;
         this.valorParcela = valorParcela;
         this.componentesFinanceiros = new ArrayList<>(componentesFinanceirosIniciais);

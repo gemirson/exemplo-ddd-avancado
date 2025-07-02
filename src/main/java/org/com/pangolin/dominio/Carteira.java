@@ -6,6 +6,7 @@ import org.com.pangolin.dominio.dtos.ParcelaComando;
 import org.com.pangolin.dominio.enums.StatusParcelaEnum;
 import org.com.pangolin.dominio.model.CarteiraId;
 import org.com.pangolin.dominio.parcela.Parcela;
+import org.com.pangolin.dominio.parcela.componentes.TipoComponente;
 import org.com.pangolin.dominio.parcela.estrategias.IEstrategiaDeCriacaoDeParcela;
 import org.com.pangolin.dominio.parcela.estrategias.IEstrategiaDeDistribuicaoDePagamento;
 import org.com.pangolin.dominio.servicos.IServicoCalculoEncargos;
@@ -72,9 +73,28 @@ public class Carteira extends Entidade<String, CarteiraId> implements Serializab
      * Aplica um pagamento a uma única e específica parcela.
      */
     public MemorialDeAmortizacao pagarParcelaUnica(int numeroParcela, Pagamento pagamento,LocalDate dataDeReferencia) {
+
+        // 1. Encontra a entidade filha alvo.
         Parcela parcelaAlvo = obterParcelaPorNumero(numeroParcela);
+
+
+        // 2. Delega a operação de pagamento para a parcela.
+        // Reutilizamos toda a lógica rica que já construímos (estados, distribuição, etc.).
         // USA A ESTRATÉGIA DEFINIDA PARA ESTE CONTRATO, EM VEZ DE CRIAR UMA NOVA.
-        return parcelaAlvo.pagar(pagamento, this.estrategiaDeDistribuicao,dataDeReferencia);
+        MemorialDeAmortizacao memorial = parcelaAlvo.pagar(pagamento, this.estrategiaDeDistribuicao, dataDeReferencia);
+
+        // 3. Inspeciona o resultado para decidir se um recálculo é necessário.
+        // A regra de negócio é: se o principal foi amortizado, o cronograma deve ser recalculado.
+        boolean principalFoiAmortizado = memorial.detalhes().stream()
+                .anyMatch(detalhesPorComponente -> detalhesPorComponente.tipo() == TipoComponente.PRINCIPAL && detalhesPorComponente.valorAplicado().isPositivo());
+
+        if (principalFoiAmortizado) {
+            // 4. Se o principal foi amortizado, recalcula o cronograma.
+            // A estratégia de recalculo é uma política de negócio que pode ser configurada.
+          //  this.estrategiaDeRecalculo.recalcular(this, dataDeReferencia);
+        }
+
+        return memorial;
     }
 
 
