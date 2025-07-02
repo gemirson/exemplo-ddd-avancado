@@ -70,6 +70,14 @@ public class Carteira extends Entidade<String, CarteiraId> implements Serializab
     }
 
     /**
+     * Executa a apuração de resultados para todas as parcelas em aberto,
+     * calculando a diferença entre seu valor atual (com encargos) e seu valor presente.
+     * Este método é idempotente para o mesmo dia.
+     *
+     * @param dataDeApropriacao A data para a qual a apropriação está sendo feita.
+     */
+    public void realizarApropriacao(LocalDate dataDeApropriacao){}
+    /**
      * Aplica um pagamento a uma única e específica parcela.
      */
     public MemorialDeAmortizacao pagarParcelaUnica(int numeroParcela, Pagamento pagamento,LocalDate dataDeReferencia) {
