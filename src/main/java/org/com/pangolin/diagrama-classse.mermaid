@@ -42,10 +42,15 @@ class Carteira {
 -IServicoCalculoEncargos servicoEncargos
 -IEstrategiaDeCriacaoDeParcela estrategiaDeCriacao
 -IEstrategiaDeDistribuicaoDePagamento estrategiaDeDistribuicao
+-obterParcelasElegiveis()
+-obterParcelaPorNumero(numeroParcela)
+-obterParcelasPorNumeros(numerosDasParcelas)
 #Carteira(id, politicas...)
 +gerarCronogramaAPartirDeComandos(comandos)
 +pagarParcelaUnica(numero, pagamento)
++pagarMultiplasParcelas(numerosDasParcelas,pagamentoTotal,dataDeReferencia)
 +amortizarPorMontante(pagamento)
++servicoDeEncargos()
 }
 
 class Parcela {
