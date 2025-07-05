@@ -3,13 +3,15 @@ package org.com.pangolin.dominio.parcela.estrategias;
 import org.com.pangolin.dominio.parcela.componentes.ComponenteFinanceiro;
 import org.com.pangolin.dominio.parcela.componentes.IComponenteFinanceiroLeitura;
 import org.com.pangolin.dominio.parcela.componentes.TipoComponente;
+import org.com.pangolin.dominio.parcela.componentes.amortizacoes.AmortizacaoComponenteCorrecaoMonetariaHandler;
+import org.com.pangolin.dominio.parcela.componentes.amortizacoes.AmortizacaoComponenteMoraContabilHandler;
+import org.com.pangolin.dominio.parcela.componentes.amortizacoes.AmortizacaoComponentePrincipalHandler;
+import org.com.pangolin.dominio.parcela.componentes.amortizacoes.IComponenteAmortizacaoHandler;
 import org.com.pangolin.dominio.vo.DetalheAplicacaoComponente;
 import org.com.pangolin.dominio.vo.Pagamento;
 import org.com.pangolin.dominio.vo.ValorMonetario;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class IntegralDistribuiçãoStrategy  implements  IEstrategiaDeDistribuicaoDePagamento{
 
@@ -19,6 +21,19 @@ public class IntegralDistribuiçãoStrategy  implements  IEstrategiaDeDistribuic
             TipoComponente.MULTA,
             TipoComponente.TAXA
     };
+
+    private final Map<TipoComponente, IComponenteAmortizacaoHandler>  registroDeHandlers;
+
+    public IntegralDistribuiçãoStrategy(){
+        this.registroDeHandlers = new EnumMap<>(TipoComponente.class);
+
+        // Registra os handlers de amortização para cada tipo de componente
+        registroDeHandlers.put(TipoComponente.PRINCIPAL,new AmortizacaoComponentePrincipalHandler());
+        registroDeHandlers.put(TipoComponente.MORA_CONTABIL, new AmortizacaoComponenteMoraContabilHandler());
+        registroDeHandlers.put(TipoComponente.CORRECAO_MONETARIA, new AmortizacaoComponenteCorrecaoMonetariaHandler());
+    }
+
+
     /**
      * Calcula como um pagamento deve ser distribuído, mas não altera o estado.
      *
@@ -31,31 +46,38 @@ public class IntegralDistribuiçãoStrategy  implements  IEstrategiaDeDistribuic
         ValorMonetario valorRestante = pagamento.valor();
         List<DetalheAplicacaoComponente> detalhes = new ArrayList<>();
 
+
         // ... Lógica para ordenar os componentes ...
+
         for (TipoComponente tipo : ORDEM_PAGAMENTO) {
-            ComponenteFinanceiro componente = (ComponenteFinanceiro) componentes.get(tipo);
-            if (componente == null || componente.saldoDevedor().isZero()) continue;
 
-            ValorMonetario saldoAnterior = componente.saldoDevedor();
+            if (valorRestante.isZero()) break;
 
-            // Calcula o valor a ser aplicado
-            ValorMonetario valorAplicado = valorRestante.min(saldoAnterior);
+            ComponenteFinanceiro componenteAtual = (ComponenteFinanceiro) componentes.get(tipo);
+            if (tipo == null) continue;
 
-            // Atualiza o valor restante do pagamento
-            valorRestante = valorRestante.subtrair(valorAplicado);
+            // 1. Encontra o handler especialista para o tipo atual.
+            IComponenteAmortizacaoHandler handler = registroDeHandlers.get(tipo);
+            if (handler == null) continue; // Ou lança exceção para tipo não mapeado
 
-            // Calcula o novo saldo do componente
-            ValorMonetario saldoNovo = saldoAnterior.subtrair(valorAplicado);
+            // 2. Pergunta ao handler se as pré-condições foram satisfeitas.
+            if (handler.preCondicoesSatisfeitas(componentes)) {
+                // 3. Comanda o handler para executar a amortização.
+                // Chama o método de cálculo puro
+                Optional<DetalheAplicacaoComponente> detalheOpt = handler.calcularAplicacao(
+                        componenteAtual,
+                        valorRestante,
+                        componentes
+                );
 
-            // Cria o "recibo" detalhado para esta operação
-            if (valorAplicado.isPositivo()) {
-                detalhes.add(new DetalheAplicacaoComponente(
-                        tipo,
-                        saldoAnterior,
-                        valorAplicado,
-                        saldoNovo
-                ));
+                if (detalheOpt.isPresent()) {
+                    DetalheAplicacaoComponente detalhe = detalheOpt.get();
+                    detalhes.add(detalhe);
+                    // Atualiza o valor restante do pagamento para o próximo handler.
+                    valorRestante = valorRestante.subtrair(detalhe.valorAplicado());
+                }
             }
+
         }
 
         return new ResultadoDistribuicao(detalhes, valorRestante);

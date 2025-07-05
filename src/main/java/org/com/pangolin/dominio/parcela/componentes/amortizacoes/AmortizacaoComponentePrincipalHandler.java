@@ -6,7 +6,6 @@ import org.com.pangolin.dominio.vo.DetalheAplicacaoComponente;
 import org.com.pangolin.dominio.vo.ValorMonetario;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
