@@ -13,7 +13,7 @@ import org.com.pangolin.dominio.vo.ValorMonetario;
 
 import java.util.*;
 
-public class IntegralDistribuiçãoStrategy  implements IEstrategiaDeDistribuicaoDeAmortizacao {
+public class IntegralDistribuiçãoAmortizacoStrategy implements IEstrategiaDeDistribuicaoDeAmortizacao {
 
     private static final TipoComponente[] ORDEM_PAGAMENTO = {
             TipoComponente.PRINCIPAL,
@@ -24,7 +24,7 @@ public class IntegralDistribuiçãoStrategy  implements IEstrategiaDeDistribuica
 
     private final Map<TipoComponente, IComponenteAmortizacaoHandler>  registroDeHandlers;
 
-    public IntegralDistribuiçãoStrategy(){
+    public IntegralDistribuiçãoAmortizacoStrategy(){
         this.registroDeHandlers = new EnumMap<>(TipoComponente.class);
 
         // Registra os handlers de amortização para cada tipo de componente

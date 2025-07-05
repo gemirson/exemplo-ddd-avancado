@@ -40,13 +40,13 @@ public class CarteiraFactory {
     public CarteiraFactory(EstrategiaCriacaoPreFixada stratCriacaoPre,
                            EstrategiaCriacaoPosFixada stratCriacaoPos,
                            ParcialDistribuicaoStrategy stratDistParcial,
-                           IntegralDistribuiçãoStrategy stratDistIntegral,
+                           IntegralDistribuiçãoAmortizacoStrategy stratDistIntegral,
                            PriceRecalculoStrategy stratRecalculoPrice) {
 
         this.servicoEncargosPadrao = new ServicoCalculoEncargos();
         this.estrategiaRecalculoPrice = new PriceRecalculoStrategy();
         this.estrategiaDistribuicaoParcial = new ParcialDistribuicaoStrategy();
-        this.estrategiaDistribuicaoIntegral = new IntegralDistribuiçãoStrategy();
+        this.estrategiaDistribuicaoIntegral = new IntegralDistribuiçãoAmortizacoStrategy();
 
         // Montamos o livro de receitas uma única vez.
         this.mapaDeConfiguracoes = new EnumMap<>(TipoProdutoEnum.class);
