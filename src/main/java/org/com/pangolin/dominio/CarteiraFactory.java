@@ -31,8 +31,8 @@ public class CarteiraFactory {
     // As implementações concretas das estratégias podem ser injetadas aqui.
     private final IServicoCalculoEncargos servicoEncargosPadrao;
     private final IRecalculoDeCronogramaStrategy estrategiaRecalculoPrice;
-    private final IEstrategiaDeDistribuicaoDePagamento estrategiaDistribuicaoParcial;
-    private final IEstrategiaDeDistribuicaoDePagamento estrategiaDistribuicaoIntegral;
+    private final IEstrategiaDeDistribuicaoDeAmortizacao estrategiaDistribuicaoParcial;
+    private final IEstrategiaDeDistribuicaoDeAmortizacao estrategiaDistribuicaoIntegral;
 
     // O "Livro de Receitas" - imutável após a construção.
     private final Map<TipoProdutoEnum, ConfiguracaoDeProduto> mapaDeConfiguracoes;

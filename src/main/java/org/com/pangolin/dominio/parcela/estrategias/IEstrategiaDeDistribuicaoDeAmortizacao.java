@@ -12,7 +12,7 @@ import java.util.Map;
  * Nova interface para estratégias que calculam a distribuição de um pagamento
  * entre os componentes financeiros de uma parcela.
  */
-public interface IEstrategiaDeDistribuicaoDePagamento {
+public interface IEstrategiaDeDistribuicaoDeAmortizacao {
 
     /**
      * Calcula como um pagamento deve ser distribuído, mas não altera o estado.

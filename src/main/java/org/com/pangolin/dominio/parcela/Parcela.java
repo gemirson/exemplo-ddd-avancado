@@ -13,7 +13,7 @@ import org.com.pangolin.dominio.parcela.componentes.TipoComponente;
 import org.com.pangolin.dominio.parcela.estados.EstadoAberta;
 import org.com.pangolin.dominio.parcela.estados.EstadoVencida;
 import org.com.pangolin.dominio.parcela.estados.IEstadoParcela;
-import org.com.pangolin.dominio.parcela.estrategias.IEstrategiaDeDistribuicaoDePagamento;
+import org.com.pangolin.dominio.parcela.estrategias.IEstrategiaDeDistribuicaoDeAmortizacao;
 import org.com.pangolin.dominio.parcela.estrategias.ResultadoDistribuicao;
 import org.com.pangolin.dominio.servicos.IServicoCalculoEncargos;
 import org.com.pangolin.dominio.vo.DetalheAplicacaoComponente;
@@ -211,7 +211,7 @@ public final  class Parcela extends Entidade<Integer, ParcelaId> implements Seri
 
     public MemorialDeAmortizacao pagar(
             Pagamento pagamento,
-            IEstrategiaDeDistribuicaoDePagamento estrategia,
+            IEstrategiaDeDistribuicaoDeAmortizacao estrategia,
             LocalDate dataDeReferencia) {
         // Delega para o objeto de estado atual. AGORA, this.estado é um EstadoAberta.
         return this.estado.pagar(this, pagamento, estrategia,dataDeReferencia);

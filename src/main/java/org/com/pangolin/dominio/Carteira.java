@@ -8,7 +8,7 @@ import org.com.pangolin.dominio.model.CarteiraId;
 import org.com.pangolin.dominio.parcela.Parcela;
 import org.com.pangolin.dominio.parcela.componentes.TipoComponente;
 import org.com.pangolin.dominio.parcela.estrategias.IEstrategiaDeCriacaoDeParcela;
-import org.com.pangolin.dominio.parcela.estrategias.IEstrategiaDeDistribuicaoDePagamento;
+import org.com.pangolin.dominio.parcela.estrategias.IEstrategiaDeDistribuicaoDeAmortizacao;
 import org.com.pangolin.dominio.servicos.IServicoCalculoEncargos;
 import org.com.pangolin.dominio.servicos.recalculos.IRecalculoDeCronogramaStrategy;
 import org.com.pangolin.dominio.vo.Pagamento;
@@ -35,7 +35,7 @@ public class Carteira extends Entidade<String, CarteiraId> implements Serializab
     private final IEstrategiaDeCriacaoDeParcela estrategiaDeCriacaoDeParcela; // NOVA POLÍTICA
 
     // A ESTRATÉGIA DE DISTRIBUIÇÃO AGORA É UMA POLÍTICA DE PRIMEIRA CLASSE
-    private final IEstrategiaDeDistribuicaoDePagamento estrategiaDeDistribuicao;
+    private final IEstrategiaDeDistribuicaoDeAmortizacao estrategiaDeDistribuicao;
 
 
     /**
@@ -45,7 +45,7 @@ public class Carteira extends Entidade<String, CarteiraId> implements Serializab
      * @param estrategiaDeRecalculo Estratégia de recalculo do cronograma.
      * @param estrategiaDeDistribuicao Estratégia de distribuição de pagamento.
      */
-    protected Carteira(CarteiraId id, IServicoCalculoEncargos servicoEncargos, IRecalculoDeCronogramaStrategy estrategiaDeRecalculo, IEstrategiaDeCriacaoDeParcela estrategiaDeCriacaoDeParcela, IEstrategiaDeDistribuicaoDePagamento estrategiaDeDistribuicao) {
+    protected Carteira(CarteiraId id, IServicoCalculoEncargos servicoEncargos, IRecalculoDeCronogramaStrategy estrategiaDeRecalculo, IEstrategiaDeCriacaoDeParcela estrategiaDeCriacaoDeParcela, IEstrategiaDeDistribuicaoDeAmortizacao estrategiaDeDistribuicao) {
         super(id);
         this.parcelas = new ArrayList<>();
         this.servicoEncargos = servicoEncargos;

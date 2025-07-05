@@ -3,7 +3,7 @@ package org.com.pangolin.dominio.parcela.estados;
 import org.com.pangolin.dominio.amortizacao.MemorialDeAmortizacao;
 import org.com.pangolin.dominio.enums.StatusParcelaEnum;
 import org.com.pangolin.dominio.parcela.Parcela;
-import org.com.pangolin.dominio.parcela.estrategias.IEstrategiaDeDistribuicaoDePagamento;
+import org.com.pangolin.dominio.parcela.estrategias.IEstrategiaDeDistribuicaoDeAmortizacao;
 
 import org.com.pangolin.dominio.parcela.estrategias.ResultadoDistribuicao;
 import org.com.pangolin.dominio.servicos.IServicoCalculoEncargos;
@@ -29,7 +29,7 @@ public class EstadoAberta implements  IEstadoParcela{
     public MemorialDeAmortizacao pagar(
             Parcela parcela,
             Pagamento pagamento,
-            IEstrategiaDeDistribuicaoDePagamento estrategia,
+            IEstrategiaDeDistribuicaoDeAmortizacao estrategia,
             LocalDate dataDeReferencia) {
 
         // Passo 0: Atuar como guardião. Verificar se o estado real não deveria ser "Vencida".

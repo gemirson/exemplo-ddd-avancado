@@ -2,7 +2,7 @@ package org.com.pangolin.dominio.parcela.estados;
 
 import org.com.pangolin.dominio.amortizacao.MemorialDeAmortizacao;
 import org.com.pangolin.dominio.parcela.Parcela;
-import org.com.pangolin.dominio.parcela.estrategias.IEstrategiaDeDistribuicaoDePagamento;
+import org.com.pangolin.dominio.parcela.estrategias.IEstrategiaDeDistribuicaoDeAmortizacao;
 import org.com.pangolin.dominio.parcela.estrategias.ResultadoDistribuicao;
 import org.com.pangolin.dominio.servicos.IServicoCalculoEncargos;
 import org.com.pangolin.dominio.vo.Pagamento;
@@ -20,7 +20,7 @@ class ComportamentoDePagamentoPadrao {
     public static MemorialDeAmortizacao executar(
             Parcela parcela,
             Pagamento pagamento,
-            IEstrategiaDeDistribuicaoDePagamento estrategia,
+            IEstrategiaDeDistribuicaoDeAmortizacao estrategia,
             IServicoCalculoEncargos servicoCalculoEncargos
     ) {
         // 1. Delega o CÁLCULO para a estratégia

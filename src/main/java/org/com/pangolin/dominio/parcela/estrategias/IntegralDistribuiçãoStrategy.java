@@ -13,7 +13,7 @@ import org.com.pangolin.dominio.vo.ValorMonetario;
 
 import java.util.*;
 
-public class IntegralDistribuiçãoStrategy  implements  IEstrategiaDeDistribuicaoDePagamento{
+public class IntegralDistribuiçãoStrategy  implements IEstrategiaDeDistribuicaoDeAmortizacao {
 
     private static final TipoComponente[] ORDEM_PAGAMENTO = {
             TipoComponente.PRINCIPAL,

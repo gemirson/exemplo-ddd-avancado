@@ -3,7 +3,7 @@ package org.com.pangolin.dominio.parcela.estados;
 import org.com.pangolin.dominio.amortizacao.MemorialDeAmortizacao;
 import org.com.pangolin.dominio.enums.StatusParcelaEnum;
 import org.com.pangolin.dominio.parcela.Parcela;
-import org.com.pangolin.dominio.parcela.estrategias.IEstrategiaDeDistribuicaoDePagamento;
+import org.com.pangolin.dominio.parcela.estrategias.IEstrategiaDeDistribuicaoDeAmortizacao;
 import org.com.pangolin.dominio.vo.Pagamento;
 import org.com.pangolin.dominio.vo.ValorMonetario;
 
@@ -19,7 +19,7 @@ public interface IEstadoParcela {
      */
     MemorialDeAmortizacao pagar(Parcela parcela,
                                 Pagamento pagamento,
-                                IEstrategiaDeDistribuicaoDePagamento estrategia,
+                                IEstrategiaDeDistribuicaoDeAmortizacao estrategia,
                                 LocalDate dataDeReferencia);
     // ... outros métodos
 

@@ -3,7 +3,7 @@ package org.com.pangolin.dominio.parcela.estados;
 import org.com.pangolin.dominio.amortizacao.MemorialDeAmortizacao;
 import org.com.pangolin.dominio.enums.StatusParcelaEnum;
 import org.com.pangolin.dominio.parcela.Parcela;
-import org.com.pangolin.dominio.parcela.estrategias.IEstrategiaDeDistribuicaoDePagamento;
+import org.com.pangolin.dominio.parcela.estrategias.IEstrategiaDeDistribuicaoDeAmortizacao;
 import org.com.pangolin.dominio.vo.Pagamento;
 import org.com.pangolin.dominio.vo.ValorMonetario;
 
@@ -18,7 +18,7 @@ public class EstadoCancelada  implements  IEstadoParcela{
     @Override
     public MemorialDeAmortizacao pagar(Parcela parcela,
                                        Pagamento pagamento,
-                                       IEstrategiaDeDistribuicaoDePagamento estrategia,
+                                       IEstrategiaDeDistribuicaoDeAmortizacao estrategia,
                                        LocalDate dataDeReferencia) {
         throw new IllegalStateException("Não é possível pagar uma parcela que está cancelada.");
     }

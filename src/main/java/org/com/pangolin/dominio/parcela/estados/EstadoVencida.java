@@ -3,12 +3,9 @@ package org.com.pangolin.dominio.parcela.estados;
 import org.com.pangolin.dominio.amortizacao.MemorialDeAmortizacao;
 import org.com.pangolin.dominio.enums.StatusParcelaEnum;
 import org.com.pangolin.dominio.parcela.Parcela;
-import org.com.pangolin.dominio.parcela.componentes.ComponenteFinanceiro;
-import org.com.pangolin.dominio.parcela.componentes.TipoComponente;
-import org.com.pangolin.dominio.parcela.estrategias.IEstrategiaDeDistribuicaoDePagamento;
+import org.com.pangolin.dominio.parcela.estrategias.IEstrategiaDeDistribuicaoDeAmortizacao;
 import org.com.pangolin.dominio.parcela.estrategias.ResultadoDistribuicao;
 import org.com.pangolin.dominio.servicos.IServicoCalculoEncargos;
-import org.com.pangolin.dominio.servicos.ServicoCalculoEncargos;
 import org.com.pangolin.dominio.vo.Pagamento;
 import org.com.pangolin.dominio.vo.ParametrosCalculoEncargos;
 import org.com.pangolin.dominio.vo.ValorMonetario;
@@ -36,7 +33,7 @@ public class EstadoVencida implements  IEstadoParcela{
     public MemorialDeAmortizacao pagar(
             Parcela parcela,
             Pagamento pagamento,
-            IEstrategiaDeDistribuicaoDePagamento estrategia,
+            IEstrategiaDeDistribuicaoDeAmortizacao estrategia,
             LocalDate dataDeReferencia) {
         System.out.println("LOG: Pagamento em parcela VENCIDA. Calculando encargos...");
         long diasDeAtraso = parcela.diasDeAtraso(dataDeReferencia);
