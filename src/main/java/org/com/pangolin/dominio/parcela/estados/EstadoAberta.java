@@ -5,6 +5,7 @@ import org.com.pangolin.dominio.enums.StatusParcelaEnum;
 import org.com.pangolin.dominio.parcela.Parcela;
 import org.com.pangolin.dominio.parcela.estrategias.IEstrategiaDeDistribuicaoDePagamento;
 
+import org.com.pangolin.dominio.parcela.estrategias.ResultadoDistribuicao;
 import org.com.pangolin.dominio.servicos.IServicoCalculoEncargos;
 import org.com.pangolin.dominio.servicos.descontos.IServicoCalculoDescontos;
 import org.com.pangolin.dominio.servicos.descontos.ServicoCalculoDescontos;
@@ -30,17 +31,29 @@ public class EstadoAberta implements  IEstadoParcela{
             Pagamento pagamento,
             IEstrategiaDeDistribuicaoDePagamento estrategia,
             LocalDate dataDeReferencia) {
-        // Passo 1: Atuar como guardião. Verificar se o estado real não deveria ser "Vencida".
+
+        // Passo 0: Atuar como guardião. Verificar se o estado real não deveria ser "Vencida".
         if (verificarETransicionarSeVencida(parcela,dataDeReferencia)) {
             // A transição ocorreu. O objeto 'this' (EstadoAberta) não é mais o estado atual da parcela.
             // Re-despachamos a chamada para a parcela, que agora irá delegar para o novo estado (EstadoVencida).
             return parcela.pagar(pagamento, estrategia,dataDeReferencia);
         }
 
-        // Passo 2: Se não estiver vencida, executa o comportamento de uma parcela em dia.
-        System.out.println("LOG: Processando pagamento para Parcela ABERTA (em dia)...");
-        // Reutiliza a lógica de pagamento padrão.
-        return ComportamentoDePagamentoPadrao.executar(parcela, pagamento, estrategia,servicoCalculoEncargos);
+        // 1. O Estado comanda a Estratégia a gerar um "plano de distribuição".
+        ResultadoDistribuicao planoDistribuicaoAmortizacao = estrategia.calcular(parcela.componentesFinanceiros(), pagamento);
+
+        // 2. O Estado comanda a PARCELA a APLICAR o plano em si mesma.
+        parcela.aplicarPlanoDeDistribuicao(planoDistribuicaoAmortizacao);
+
+        // 3. A Parcela GERA o registro histórico formal
+        MemorialDeAmortizacao memorial = parcela.criarMemorial(pagamento, planoDistribuicaoAmortizacao, estrategia.getClass().getSimpleName());
+
+        // 4. TRANSIÇÃO DE ESTADO para PAGA se o saldo for zerado
+        if (parcela.saldoDevedor().isZero()) {
+            parcela.transicionarPara(new EstadoPaga(servicoCalculoEncargos));
+        }
+        // 5. RETORNA O MEMORIAL da transação
+        return memorial;
     }
 
     @Override
@@ -82,7 +95,7 @@ public class EstadoAberta implements  IEstadoParcela{
         // Se há antecipação, calculamos o desconto.
         System.out.println("LOG: Calculando desconto para " + diasDeAntecipacao + " dias de antecipação.");
 
-        ParametrosDesconto parametros = parcela.getContrato().getParametrosDeDesconto();
+        ParametrosDesconto parametros = null; //parcela.getContrato().getParametrosDeDesconto();
         IServicoCalculoDescontos servicoDesconto = new ServicoCalculoDescontos(); // Pode ser injetado
 
         ValorMonetario valorDoDesconto = servicoDesconto.calcularDesconto(parcela, parametros, diasDeAntecipacao);

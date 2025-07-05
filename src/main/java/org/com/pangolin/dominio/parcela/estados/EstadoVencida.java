@@ -6,6 +6,7 @@ import org.com.pangolin.dominio.parcela.Parcela;
 import org.com.pangolin.dominio.parcela.componentes.ComponenteFinanceiro;
 import org.com.pangolin.dominio.parcela.componentes.TipoComponente;
 import org.com.pangolin.dominio.parcela.estrategias.IEstrategiaDeDistribuicaoDePagamento;
+import org.com.pangolin.dominio.parcela.estrategias.ResultadoDistribuicao;
 import org.com.pangolin.dominio.servicos.IServicoCalculoEncargos;
 import org.com.pangolin.dominio.servicos.ServicoCalculoEncargos;
 import org.com.pangolin.dominio.vo.Pagamento;
@@ -51,9 +52,21 @@ public class EstadoVencida implements  IEstadoParcela{
         parcela.apurarEncargosPorAtraso(juros, multa);
 
 
-        // 2. PROSSEGUE COM A LÓGICA DE PAGAMENTO NORMAL (agora com os novos componentes)
-        // Delega o resto do fluxo para um método privado para evitar duplicação de código.
-        return new ComportamentoDePagamentoPadrao().executar(parcela, pagamento, estrategia);
+        // 1. O Estado comanda a Estratégia a gerar um "plano de distribuição".
+        ResultadoDistribuicao planoDistribuicaoAmortizacao = estrategia.calcular(parcela.componentesFinanceiros(), pagamento);
+
+        // 2. O Estado comanda a PARCELA a APLICAR o plano em si mesma.
+        parcela.aplicarPlanoDeDistribuicao(planoDistribuicaoAmortizacao);
+
+        // 3. A Parcela GERA o registro histórico formal
+        MemorialDeAmortizacao memorial = parcela.criarMemorial(pagamento, planoDistribuicaoAmortizacao, estrategia.getClass().getSimpleName());
+
+        // 4. TRANSIÇÃO DE ESTADO para PAGA se o saldo for zerado
+        if (parcela.saldoDevedor().isZero()) {
+            parcela.transicionarPara(new EstadoPaga(servicoEncargos));
+        }
+        // 5. RETORNA O MEMORIAL da transação
+        return memorial;
     }
 
     /**
@@ -91,7 +104,7 @@ public class EstadoVencida implements  IEstadoParcela{
 
         System.out.println("LOG: Calculando encargos para " + diasDeAtraso + " dias de atraso.");
 
-        ParametrosCalculoEncargos parametros = parcela.getContrato().getParametrosDeEncargo();
+        ParametrosCalculoEncargos parametros = null ;
 
         ValorMonetario juros = servicoEncargos.calcularJuros(parcela, parametros, diasDeAtraso);
         ValorMonetario multa = servicoEncargos.calcularMulta(parcela, parametros, diasDeAtraso);

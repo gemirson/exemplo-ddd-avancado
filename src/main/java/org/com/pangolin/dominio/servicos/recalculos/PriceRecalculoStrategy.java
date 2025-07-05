@@ -4,7 +4,7 @@ import org.com.pangolin.dominio.enums.StatusParcelaEnum;
 import org.com.pangolin.dominio.parcela.Parcela;
 import org.com.pangolin.dominio.parcela.componentes.ComponenteFinanceiro;
 import org.com.pangolin.dominio.parcela.componentes.TipoComponente;
-import org.com.pangolin.dominio.parcela.tipos.ParcelaPreFixada;
+
 import org.com.pangolin.dominio.vo.ValorMonetario;
 
 import java.math.BigDecimal;
@@ -20,7 +20,7 @@ public class PriceRecalculoStrategy implements IRecalculoDeCronogramaStrategy {
         System.out.println("LOG: Recalculando cronograma futuro usando a Curva Price...");
         List<Parcela> novoCronogramaFuturo = new ArrayList<>();
 
-        // 1. Filtrar as parcelas que precisam ser recalculadas (as futuras)
+    /*    // 1. Filtrar as parcelas que precisam ser recalculadas (as futuras)
         List<Parcela> parcelasFuturas = parcelasAtuais.stream()
                 .filter(p -> Integer.parseInt(p.Id().Id())  > numeroParcelaAmortizada && p.status() == StatusParcelaEnum.ABERTA)
                 .toList();
@@ -61,7 +61,7 @@ public class PriceRecalculoStrategy implements IRecalculoDeCronogramaStrategy {
             saldoDevedorAtual = saldoDevedorAtual.subtract(principalDaParcela);
         }
 
-        System.out.println("LOG: Cronograma recalculado. Novo valor da parcela: " + novoValorParcela);
+        System.out.println("LOG: Cronograma recalculado. Novo valor da parcela: " + novoValorParcela);*/
         return novoCronogramaFuturo;
     }
 

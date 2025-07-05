@@ -1,6 +1,5 @@
 package org.com.pangolin.dominio.parcela;
 
-import org.com.pangolin.dominio.amortizacao.IAmortizacaoStrategy;
 import org.com.pangolin.dominio.amortizacao.MemorialDeAmortizacao;
 import org.com.pangolin.dominio.core.Entidade;
 import org.com.pangolin.dominio.core.Resultado;
@@ -9,6 +8,7 @@ import org.com.pangolin.dominio.enums.StatusParcelaEnum;
 import org.com.pangolin.dominio.excecoes.RegraDeNegocioException;
 import org.com.pangolin.dominio.parcela.componentes.ComponenteFinanceiro;
 import org.com.pangolin.dominio.parcela.componentes.ComponenteFinanceiroValidadorFactory;
+import org.com.pangolin.dominio.parcela.componentes.IComponenteFinanceiroLeitura;
 import org.com.pangolin.dominio.parcela.componentes.TipoComponente;
 import org.com.pangolin.dominio.parcela.estados.EstadoAberta;
 import org.com.pangolin.dominio.parcela.estados.EstadoVencida;
@@ -22,7 +22,6 @@ import org.com.pangolin.dominio.vo.Pagamento;
 import org.com.pangolin.dominio.vo.ValorMonetario;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
@@ -242,6 +241,23 @@ public final  class Parcela extends Entidade<Integer, ParcelaId> implements Seri
     }
 
     /**
+     * A Parcela, e somente ela, executa o plano de mutação em seus próprios componentes.
+     */
+    public void aplicarPlanoDeDistribuicao(ResultadoDistribuicao plano) {
+
+        // Aqui, usamos o método componentesMap() para obter uma visão mutável do mapa de componentes.
+        Map<TipoComponente, ComponenteFinanceiro> mapaMutavel = this.componentesMap();
+
+        System.out.println("LOG: Parcela aplicando plano de distribuição em seu próprio estado...");
+        for (DetalheAplicacaoComponente detalhe : plano.detalhes()) {
+            ComponenteFinanceiro componenteParaModificar = mapaMutavel.get(detalhe.tipo());
+            if (componenteParaModificar != null) {
+                // A mutação final é feita aqui, dentro da entidade guardiã.
+                componenteParaModificar.atualizarSaldoDevedor(detalhe.saldoNovo());
+            }
+        }
+    }
+    /**
      * Usa os mesmos detalhes para construir o registro histórico final.
      */
     public MemorialDeAmortizacao criarMemorial(Pagamento pagamento, ResultadoDistribuicao resultado, String nomeEstrategia) {
@@ -311,6 +327,17 @@ public final  class Parcela extends Entidade<Integer, ParcelaId> implements Seri
 
     public LocalDate dataVencimento() {
           return dataVencimento;
+    }
+
+
+    public Map<TipoComponente, IComponenteFinanceiroLeitura> componentesFinanceiros(){
+        return Collections.unmodifiableMap(
+                componentesMap().entrySet().stream()
+                        .collect(Collectors.toUnmodifiableMap(
+                                Map.Entry::getKey,
+                                e -> (IComponenteFinanceiroLeitura) e.getValue()
+                        ))
+        );
     }
 
     /**

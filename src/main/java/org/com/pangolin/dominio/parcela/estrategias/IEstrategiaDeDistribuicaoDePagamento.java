@@ -1,10 +1,12 @@
 package org.com.pangolin.dominio.parcela.estrategias;
 
 import org.com.pangolin.dominio.parcela.componentes.ComponenteFinanceiro;
+import org.com.pangolin.dominio.parcela.componentes.IComponenteFinanceiroLeitura;
 import org.com.pangolin.dominio.parcela.componentes.TipoComponente;
 import org.com.pangolin.dominio.vo.Pagamento;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Nova interface para estratégias que calculam a distribuição de um pagamento
@@ -18,7 +20,7 @@ public interface IEstrategiaDeDistribuicaoDePagamento {
      * @param pagamento O pagamento recebido.
      * @return Um resultado detalhando como os fundos foram distribuídos.
      */
-    ResultadoDistribuicao calcular(List<ComponenteFinanceiro> componentes, Pagamento pagamento);
+    ResultadoDistribuicao calcular(Map<TipoComponente,IComponenteFinanceiroLeitura> componentes, Pagamento pagamento);
 
     /**
      * Método auxiliar para encontrar um componente financeiro específico
@@ -28,8 +30,8 @@ public interface IEstrategiaDeDistribuicaoDePagamento {
      * @param tipo O tipo do componente a ser encontrado.
      * @return O componente financeiro correspondente ao tipo, ou null se não encontrado.
      */
-    static ComponenteFinanceiro componenteFinanceiro(List<ComponenteFinanceiro> componentes, TipoComponente tipo) {
-        ComponenteFinanceiro componente = componentes.stream()
+    default ComponenteFinanceiro componenteFinanceiro(List<IComponenteFinanceiroLeitura> componentes, TipoComponente tipo) {
+        ComponenteFinanceiro componente = (ComponenteFinanceiro) componentes.stream()
                 .filter(c -> c.tipo().equals(tipo))
                 .findFirst()
                 .orElse(null);

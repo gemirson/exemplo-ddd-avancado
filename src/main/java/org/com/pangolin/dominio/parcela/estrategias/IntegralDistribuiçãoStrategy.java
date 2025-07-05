@@ -1,6 +1,7 @@
 package org.com.pangolin.dominio.parcela.estrategias;
 
 import org.com.pangolin.dominio.parcela.componentes.ComponenteFinanceiro;
+import org.com.pangolin.dominio.parcela.componentes.IComponenteFinanceiroLeitura;
 import org.com.pangolin.dominio.parcela.componentes.TipoComponente;
 import org.com.pangolin.dominio.vo.DetalheAplicacaoComponente;
 import org.com.pangolin.dominio.vo.Pagamento;
@@ -8,6 +9,7 @@ import org.com.pangolin.dominio.vo.ValorMonetario;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class IntegralDistribuiçãoStrategy  implements  IEstrategiaDeDistribuicaoDePagamento{
 
@@ -25,13 +27,13 @@ public class IntegralDistribuiçãoStrategy  implements  IEstrategiaDeDistribuic
      * @return Um resultado detalhando como os fundos foram distribuídos.
      */
     @Override
-    public ResultadoDistribuicao calcular(List<ComponenteFinanceiro> componentes, Pagamento pagamento) {
+    public ResultadoDistribuicao calcular(Map<TipoComponente,IComponenteFinanceiroLeitura> componentes, Pagamento pagamento) {
         ValorMonetario valorRestante = pagamento.valor();
         List<DetalheAplicacaoComponente> detalhes = new ArrayList<>();
 
         // ... Lógica para ordenar os componentes ...
         for (TipoComponente tipo : ORDEM_PAGAMENTO) {
-            ComponenteFinanceiro componente = IEstrategiaDeDistribuicaoDePagamento.componenteFinanceiro(componentes, tipo);
+            ComponenteFinanceiro componente = (ComponenteFinanceiro) componentes.get(tipo);
             if (componente == null || componente.saldoDevedor().isZero()) continue;
 
             ValorMonetario saldoAnterior = componente.saldoDevedor();
@@ -58,5 +60,6 @@ public class IntegralDistribuiçãoStrategy  implements  IEstrategiaDeDistribuic
 
         return new ResultadoDistribuicao(detalhes, valorRestante);
     }
+
 
 }

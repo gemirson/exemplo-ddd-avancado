@@ -24,7 +24,7 @@ class ComportamentoDePagamentoPadrao {
             IServicoCalculoEncargos servicoCalculoEncargos
     ) {
         // 1. Delega o CÁLCULO para a estratégia
-        ResultadoDistribuicao resultadoCalc = estrategia.calcular(parcela.componentes(), pagamento);
+        ResultadoDistribuicao resultadoCalc = estrategia.calcular(parcela.componentesFinanceiros(), pagamento);
 
         // 2. A Parcela ATUALIZA seu próprio estado com o resultado
         parcela.aplicarResultadoDistribuicao(resultadoCalc);

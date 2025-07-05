@@ -7,7 +7,7 @@ import org.com.pangolin.dominio.vo.ValorMonetario;
 
 import java.math.BigDecimal;
 
-public class ComponenteFinanceiro {
+public class ComponenteFinanceiro  implements  IComponenteFinanceiroLeitura{
     private final TipoComponente tipo;
     private final ValorMonetario valorOriginal;
     private ValorMonetario saldoDevedor;
@@ -25,8 +25,19 @@ public class ComponenteFinanceiro {
     }
 
     // Getters
+    @Override
     public TipoComponente tipo() { return tipo; }
+    @Override
+    public ValorMonetario valorOriginal() { return valorOriginal;}
+    @Override
     public ValorMonetario saldoDevedor() { return saldoDevedor; }
+
+    /**
+     * Atualiza o saldo devedor do componente financeiro.
+     * Lança uma exceção se o novo saldo for negativo.
+     *
+     * @param novoSaldo O novo saldo devedor a ser definido.
+     */
 
     public void  atualizarSaldoDevedor(ValorMonetario novoSaldo) {
         if (novoSaldo.isNegativo()) {

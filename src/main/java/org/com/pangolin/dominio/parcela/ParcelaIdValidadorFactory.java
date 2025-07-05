@@ -10,7 +10,7 @@ import java.util.List;
 public class ParcelaIdValidadorFactory {
 
     private static final List<RegraDeValidacao<ParcelaId>> REGRAS = List.of(
-            new RegraDeValidacao<>(
+         /*   new RegraDeValidacao<>(
                     id -> id != null && id.Id()!= null && !id.Id().isBlank(),
                     new ErroDeValidacao("Id da entidade não pode ser nulo ou vazio.", "id")
             ),
@@ -32,7 +32,7 @@ public class ParcelaIdValidadorFactory {
                         }
                     },
                     new ErroDeValidacao("O número da parcela deve ser um inteiro entre 0 e 999.", "id")
-            )
+            )*/
             // *** NOVA REGRA PODE SER ADICIONADA AQUI SEM ALTERAR NENHUM OUTRO CÓDIGO ***
     );
 
