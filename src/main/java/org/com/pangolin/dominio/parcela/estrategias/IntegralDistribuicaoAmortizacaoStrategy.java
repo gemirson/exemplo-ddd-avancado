@@ -13,24 +13,26 @@ import org.com.pangolin.dominio.vo.ValorMonetario;
 
 import java.util.*;
 
-public class IntegralDistribuiçãoAmortizacoStrategy implements IEstrategiaDeDistribuicaoDeAmortizacao {
+public class IntegralDistribuicaoAmortizacaoStrategy implements IEstrategiaDeDistribuicaoDeAmortizacao {
 
-    private static final TipoComponente[] ORDEM_PAGAMENTO = {
+    private static final TipoComponente[] ORDEM_AMORTIZACAO_INTEGRAL = {
             TipoComponente.PRINCIPAL,
             TipoComponente.JUROS,
             TipoComponente.MULTA,
             TipoComponente.TAXA
     };
 
-    private final Map<TipoComponente, IComponenteAmortizacaoHandler>  registroDeHandlers;
+    private final Map<TipoComponente, IComponenteAmortizacaoHandler>  registroDeHandlersAmortizacao;
+    private final List<TipoComponente> ordemAmortizacaoIntegral;
 
-    public IntegralDistribuiçãoAmortizacoStrategy(){
-        this.registroDeHandlers = new EnumMap<>(TipoComponente.class);
+    public IntegralDistribuicaoAmortizacaoStrategy(List<TipoComponente> ordemAmortizacaoIntegral){
+        this.ordemAmortizacaoIntegral = ordemAmortizacaoIntegral;
+        this.registroDeHandlersAmortizacao = new EnumMap<>(TipoComponente.class);
 
         // Registra os handlers de amortização para cada tipo de componente
-        registroDeHandlers.put(TipoComponente.PRINCIPAL,new AmortizacaoComponentePrincipalHandler());
-        registroDeHandlers.put(TipoComponente.MORA_CONTABIL, new AmortizacaoComponenteMoraContabilHandler());
-        registroDeHandlers.put(TipoComponente.CORRECAO_MONETARIA, new AmortizacaoComponenteCorrecaoMonetariaHandler());
+        registroDeHandlersAmortizacao.put(TipoComponente.PRINCIPAL,new AmortizacaoComponentePrincipalHandler());
+        registroDeHandlersAmortizacao.put(TipoComponente.MORA_CONTABIL, new AmortizacaoComponenteMoraContabilHandler());
+        registroDeHandlersAmortizacao.put(TipoComponente.CORRECAO_MONETARIA, new AmortizacaoComponenteCorrecaoMonetariaHandler());
     }
 
 
@@ -49,7 +51,7 @@ public class IntegralDistribuiçãoAmortizacoStrategy implements IEstrategiaDeDi
 
         // ... Lógica para ordenar os componentes ...
 
-        for (TipoComponente tipo : ORDEM_PAGAMENTO) {
+        for (TipoComponente tipo : ordemAmortizacaoIntegral) {
 
             if (valorRestante.isZero()) break;
 
@@ -57,7 +59,7 @@ public class IntegralDistribuiçãoAmortizacoStrategy implements IEstrategiaDeDi
             if (tipo == null) continue;
 
             // 1. Encontra o handler especialista para o tipo atual.
-            IComponenteAmortizacaoHandler handler = registroDeHandlers.get(tipo);
+            IComponenteAmortizacaoHandler handler = registroDeHandlersAmortizacao.get(tipo);
             if (handler == null) continue; // Ou lança exceção para tipo não mapeado
 
             // 2. Pergunta ao handler se as pré-condições foram satisfeitas.

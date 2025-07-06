@@ -4,13 +4,17 @@ import org.com.pangolin.dominio.amortizacao.MemorialDeAmortizacao;
 import org.com.pangolin.dominio.core.Entidade;
 import org.com.pangolin.dominio.dtos.ParcelaComando;
 import org.com.pangolin.dominio.enums.StatusParcelaEnum;
+import org.com.pangolin.dominio.enums.TipoDistribuicaoAmortizacaoEnum;
 import org.com.pangolin.dominio.model.CarteiraId;
 import org.com.pangolin.dominio.parcela.Parcela;
 import org.com.pangolin.dominio.parcela.componentes.TipoComponente;
+import org.com.pangolin.dominio.parcela.estados.ContextoTemporal;
 import org.com.pangolin.dominio.parcela.estrategias.IEstrategiaDeCriacaoDeParcela;
 import org.com.pangolin.dominio.parcela.estrategias.IEstrategiaDeDistribuicaoDeAmortizacao;
+import org.com.pangolin.dominio.parcela.estrategias.ProvedorDeEstrategiaDeDistribuicaoAmortizacoes;
 import org.com.pangolin.dominio.servicos.IServicoCalculoEncargos;
 import org.com.pangolin.dominio.servicos.recalculos.IRecalculoDeCronogramaStrategy;
+import org.com.pangolin.dominio.servicos.amortizacoes.SeletorDeOrdemDeAmortizacao;
 import org.com.pangolin.dominio.vo.Pagamento;
 import org.com.pangolin.dominio.vo.ValorMonetario;
 
@@ -19,6 +23,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class Carteira extends Entidade<String, CarteiraId> implements Serializable {
@@ -32,10 +37,11 @@ public class Carteira extends Entidade<String, CarteiraId> implements Serializab
     // --- POLÍTICAS E PARÂMETROS DO CONTRATO (AGORA COMPLETO) ---
     private final IServicoCalculoEncargos servicoEncargos;
     private final IRecalculoDeCronogramaStrategy estrategiaDeRecalculo;
-    private final IEstrategiaDeCriacaoDeParcela estrategiaDeCriacaoDeParcela; // NOVA POLÍTICA
+    private  IEstrategiaDeCriacaoDeParcela estrategiaDeCriacaoDeParcela;
+    private final ProvedorDeEstrategiaDeDistribuicaoAmortizacoes provedorDeEstrategiaDeDistribuicaoAmortizacoes;// NOVA POLÍTICA
 
     // A ESTRATÉGIA DE DISTRIBUIÇÃO AGORA É UMA POLÍTICA DE PRIMEIRA CLASSE
-    private final IEstrategiaDeDistribuicaoDeAmortizacao estrategiaDeDistribuicao;
+    private  IEstrategiaDeDistribuicaoDeAmortizacao estrategiaDeDistribuicao;
 
 
     /**
@@ -43,16 +49,20 @@ public class Carteira extends Entidade<String, CarteiraId> implements Serializab
      * @param id Identificador único da carteira.
      * @param servicoEncargos Serviço de cálculo de encargos financeiros.
      * @param estrategiaDeRecalculo Estratégia de recalculo do cronograma.
-     * @param estrategiaDeDistribuicao Estratégia de distribuição de pagamento.
+
      */
-    protected Carteira(CarteiraId id, IServicoCalculoEncargos servicoEncargos, IRecalculoDeCronogramaStrategy estrategiaDeRecalculo, IEstrategiaDeCriacaoDeParcela estrategiaDeCriacaoDeParcela, IEstrategiaDeDistribuicaoDeAmortizacao estrategiaDeDistribuicao) {
+    protected Carteira(CarteiraId id,
+                       IServicoCalculoEncargos servicoEncargos,
+                       IRecalculoDeCronogramaStrategy estrategiaDeRecalculo,
+                       IEstrategiaDeCriacaoDeParcela estrategiaDeCriacaoDeParcela) {
         super(id);
         this.parcelas = new ArrayList<>();
         this.servicoEncargos = servicoEncargos;
         this.estrategiaDeCriacaoDeParcela = estrategiaDeCriacaoDeParcela;
-        this.estrategiaDeDistribuicao = estrategiaDeDistribuicao;
+
         carteiraId = id;
         this.estrategiaDeRecalculo = estrategiaDeRecalculo;
+        this.provedorDeEstrategiaDeDistribuicaoAmortizacoes = new ProvedorDeEstrategiaDeDistribuicaoAmortizacoes();
     }
 
 
@@ -84,12 +94,19 @@ public class Carteira extends Entidade<String, CarteiraId> implements Serializab
 
         // 1. Encontra a entidade filha alvo.
         Parcela parcelaAlvo = obterParcelaPorNumero(numeroParcela);
+        // 2. A CARTEIRA OBTÉM O CONTEXTO DO ESTADO DA PARCELA.
+        ContextoTemporal contexto = parcelaAlvo.estado().contextoTemporal(parcelaAlvo, dataDeReferencia);
 
+        Map<TipoDistribuicaoAmortizacaoEnum,List<TipoComponente>> ordensAmortizacoes =  SeletorDeOrdemDeAmortizacao.selecionarOrdemAmortizacaoParaContexto(contexto);
+
+        List<TipoComponente> ordenAmortizacao = ordensAmortizacoes.get(pagamento.tipoDistribuicaoAmortizacao());
+
+        IEstrategiaDeDistribuicaoDeAmortizacao estrategiaDeDistribuicao = provedorDeEstrategiaDeDistribuicaoAmortizacoes.obterEstrategia(pagamento.tipoDistribuicaoAmortizacao(),ordenAmortizacao);
 
         // 2. Delega a operação de pagamento para a parcela.
         // Reutilizamos toda a lógica rica que já construímos (estados, distribuição, etc.).
         // USA A ESTRATÉGIA DEFINIDA PARA ESTE CONTRATO, EM VEZ DE CRIAR UMA NOVA.
-        MemorialDeAmortizacao memorial = parcelaAlvo.pagar(pagamento, this.estrategiaDeDistribuicao, dataDeReferencia);
+        MemorialDeAmortizacao memorial = parcelaAlvo.pagar(pagamento, estrategiaDeDistribuicao, dataDeReferencia);
 
         // 3. Inspeciona o resultado para decidir se um recálculo é necessário.
         // A regra de negócio é: se o principal foi amortizado, o cronograma deve ser recalculado.
@@ -136,7 +153,7 @@ public class Carteira extends Entidade<String, CarteiraId> implements Serializab
             Pagamento pagamentoDaParcela = new Pagamento(
                     parcela.saldoDevedor(),
                     pagamentoTotal.data(),
-                    pagamentoTotal.metodo()
+                    pagamentoTotal.tipoDistribuicaoAmortizacao()
             );
             memoriais.add(parcela.pagar(pagamentoDaParcela, this.estrategiaDeDistribuicao,dataDeReferencia));
         }
@@ -172,7 +189,7 @@ public class Carteira extends Entidade<String, CarteiraId> implements Serializab
             Pagamento pagamentoDaParcela = new Pagamento(
                     valorParaAplicar,
                     pagamentoMontante.data(),
-                    pagamentoMontante.metodo()
+                    pagamentoMontante.tipoDistribuicaoAmortizacao()
             );
 
             // A chamada ao `parcela.pagar` já é robusta e lida com estados, componentes, etc.

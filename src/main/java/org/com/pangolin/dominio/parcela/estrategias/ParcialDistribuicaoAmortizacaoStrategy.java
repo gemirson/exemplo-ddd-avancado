@@ -15,22 +15,30 @@ import java.util.*;
 
 public class ParcialDistribuicaoAmortizacaoStrategy implements IEstrategiaDeDistribuicaoDeAmortizacao {
 
-    private static final TipoComponente[] ORDEM_PAGAMENTO = {
+    private static final TipoComponente[] ORDEM_AMORTIZACAO_PARCIAL  = {
             TipoComponente.JUROS,
             TipoComponente.MULTA,
             TipoComponente.TAXA,
             TipoComponente.PRINCIPAL
     };
 
-    private final Map<TipoComponente, IComponenteAmortizacaoHandler>  registroDeHandlers;
+    /**
+     * Mapeia os tipos de componentes para seus respectivos handlers de amortização.
+     * Isso permite que a estratégia utilize o handler correto para cada tipo de componente
+     * sem precisar de condicionais complexas.
+     */
 
-    public ParcialDistribuicaoAmortizacaoStrategy(){
-        this.registroDeHandlers = new EnumMap<>(TipoComponente.class);
+    private final Map<TipoComponente, IComponenteAmortizacaoHandler>  registroDeHandlersAmortizacao;
+    private final List<TipoComponente> ordemAmortizacaoParcial;
+
+    public ParcialDistribuicaoAmortizacaoStrategy(List<TipoComponente> ordemAmortizacaoParcial) {
+        this.ordemAmortizacaoParcial = ordemAmortizacaoParcial;
+        this.registroDeHandlersAmortizacao = new EnumMap<>(TipoComponente.class);
 
         // Registra os handlers de amortização para cada tipo de componente
-        registroDeHandlers.put(TipoComponente.PRINCIPAL,new AmortizacaoComponentePrincipalHandler());
-        registroDeHandlers.put(TipoComponente.MORA_CONTABIL, new AmortizacaoComponenteMoraContabilHandler());
-        registroDeHandlers.put(TipoComponente.CORRECAO_MONETARIA, new AmortizacaoComponenteCorrecaoMonetariaHandler());
+        registroDeHandlersAmortizacao.put(TipoComponente.PRINCIPAL,new AmortizacaoComponentePrincipalHandler());
+        registroDeHandlersAmortizacao.put(TipoComponente.MORA_CONTABIL, new AmortizacaoComponenteMoraContabilHandler());
+        registroDeHandlersAmortizacao.put(TipoComponente.CORRECAO_MONETARIA, new AmortizacaoComponenteCorrecaoMonetariaHandler());
     }
 
     /**
@@ -47,7 +55,7 @@ public class ParcialDistribuicaoAmortizacaoStrategy implements IEstrategiaDeDist
 
         // ... Lógica para ordenar os componentes ...
 
-        for (TipoComponente tipo : ORDEM_PAGAMENTO) {
+        for (TipoComponente tipo : ordemAmortizacaoParcial) {
 
             if (valorRestante.isZero()) break;
 
@@ -55,7 +63,7 @@ public class ParcialDistribuicaoAmortizacaoStrategy implements IEstrategiaDeDist
             if (tipo == null) continue;
 
             // 1. Encontra o handler especialista para o tipo atual.
-            IComponenteAmortizacaoHandler handler = registroDeHandlers.get(tipo);
+            IComponenteAmortizacaoHandler handler = registroDeHandlersAmortizacao.get(tipo);
             if (handler == null) continue; // Ou lança exceção para tipo não mapeado
 
             // 2. Pergunta ao handler se as pré-condições foram satisfeitas.

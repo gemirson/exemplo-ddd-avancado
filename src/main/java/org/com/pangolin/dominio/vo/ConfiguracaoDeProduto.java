@@ -11,7 +11,6 @@ import org.com.pangolin.dominio.servicos.recalculos.IRecalculoDeCronogramaStrate
  */
 public record ConfiguracaoDeProduto(
         IEstrategiaDeCriacaoDeParcela estrategiaDeCriacao,
-        IEstrategiaDeDistribuicaoDeAmortizacao estrategiaDeDistribuicao,
         IRecalculoDeCronogramaStrategy estrategiaDeRecalculo
         // ... outras políticas futuras podem ser adicionadas aqui ...
 ) {}

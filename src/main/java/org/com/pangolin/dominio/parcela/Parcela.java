@@ -10,6 +10,7 @@ import org.com.pangolin.dominio.parcela.componentes.ComponenteFinanceiro;
 import org.com.pangolin.dominio.parcela.componentes.ComponenteFinanceiroValidadorFactory;
 import org.com.pangolin.dominio.parcela.componentes.IComponenteFinanceiroLeitura;
 import org.com.pangolin.dominio.parcela.componentes.TipoComponente;
+import org.com.pangolin.dominio.parcela.estados.ContextoTemporal;
 import org.com.pangolin.dominio.parcela.estados.EstadoAberta;
 import org.com.pangolin.dominio.parcela.estados.EstadoVencida;
 import org.com.pangolin.dominio.parcela.estados.IEstadoParcela;
@@ -116,6 +117,9 @@ public final  class Parcela extends Entidade<Integer, ParcelaId> implements Seri
         return valorParcela;
     }
 
+    public IEstadoParcela estado() {
+        return this.estado;
+    }
 
     public ParcelaId Id(){
         return this.parcelaId;
@@ -391,6 +395,9 @@ public final  class Parcela extends Entidade<Integer, ParcelaId> implements Seri
             .map(r -> r.getErro().get())
             .collect(Collectors.toList());
     }
+
+
+
 
     public Resultado<Parcela, List<ErroDeValidacao>> validarParaAmortizacao() {
         List<ErroDeValidacao> erros = validarComponentesFinanceiros();

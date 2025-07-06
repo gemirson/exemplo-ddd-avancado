@@ -2,6 +2,7 @@ package org.com.pangolin.dominio;
 
 import org.com.pangolin.dominio.dtos.ComandoCriarCarteira;
 import org.com.pangolin.dominio.dtos.ParcelaComando;
+import org.com.pangolin.dominio.enums.TipoDistribuicaoAmortizacaoEnum;
 import org.com.pangolin.dominio.enums.TipoProdutoEnum;
 import org.com.pangolin.dominio.excecoes.RegraDeNegocioException;
 import org.com.pangolin.dominio.model.CarteiraId;
@@ -31,43 +32,46 @@ public class CarteiraFactory {
     // As implementações concretas das estratégias podem ser injetadas aqui.
     private final IServicoCalculoEncargos servicoEncargosPadrao;
     private final IRecalculoDeCronogramaStrategy estrategiaRecalculoPrice;
-    private final IEstrategiaDeDistribuicaoDeAmortizacao estrategiaDistribuicaoParcial;
-    private final IEstrategiaDeDistribuicaoDeAmortizacao estrategiaDistribuicaoIntegral;
+
 
     // O "Livro de Receitas" - imutável após a construção.
     private final Map<TipoProdutoEnum, ConfiguracaoDeProduto> mapaDeConfiguracoes;
+    private final Map<TipoDistribuicaoAmortizacaoEnum, IEstrategiaDeDistribuicaoDeAmortizacao> mapaDeEstrategiasDistribuicao;
 
     public CarteiraFactory(EstrategiaCriacaoPreFixada stratCriacaoPre,
                            EstrategiaCriacaoPosFixada stratCriacaoPos,
-                           ParcialDistribuicaoAmortizacaoStrategy stratDistParcial,
-                           IntegralDistribuiçãoAmortizacoStrategy stratDistIntegral,
                            PriceRecalculoStrategy stratRecalculoPrice) {
 
         this.servicoEncargosPadrao = new ServicoCalculoEncargos();
         this.estrategiaRecalculoPrice = new PriceRecalculoStrategy();
-        this.estrategiaDistribuicaoParcial = new ParcialDistribuicaoAmortizacaoStrategy();
-        this.estrategiaDistribuicaoIntegral = new IntegralDistribuiçãoAmortizacoStrategy();
+
 
         // Montamos o livro de receitas uma única vez.
         this.mapaDeConfiguracoes = new EnumMap<>(TipoProdutoEnum.class);
+        this.mapaDeEstrategiasDistribuicao = new EnumMap<>(TipoDistribuicaoAmortizacaoEnum.class);
+
 
         // Receita 1: Pré-Fixado com distribuição Parcial
         mapaDeConfiguracoes.put(
                 TipoProdutoEnum.PRE_FIXADO_DISTRIBUICAO_PARCIAL,
-                new ConfiguracaoDeProduto(stratCriacaoPre, stratDistParcial, stratRecalculoPrice)
+                new ConfiguracaoDeProduto(stratCriacaoPre, stratRecalculoPrice)
         );
 
         // Receita 2: Pré-Fixado com distribuição Integral
         mapaDeConfiguracoes.put(
                 TipoProdutoEnum.PRE_FIXADO_DISTRIBUICAO_INTEGRAL,
-                new ConfiguracaoDeProduto(stratCriacaoPre, stratDistIntegral, stratRecalculoPrice)
+                new ConfiguracaoDeProduto(stratCriacaoPre,stratRecalculoPrice)
         );
 
         // Receita 3: Pós-Fixado com distribuição Parcial
         mapaDeConfiguracoes.put(
                 TipoProdutoEnum.POS_FIXADO_DISTRIBUICAO_PARCIAL,
-                new ConfiguracaoDeProduto(stratCriacaoPos, stratDistParcial, stratRecalculoPrice)
+                new ConfiguracaoDeProduto(stratCriacaoPos,  stratRecalculoPrice)
         );
+
+        // Receita 4: Pós-Fixado com distribuição Integral
+
+
 
         // E assim por diante para todas as combinações válidas...
         //...
@@ -102,8 +106,8 @@ public class CarteiraFactory {
                     CarteiraId.of(comando.id().toString()),
                     servicoEncargosPadrao,
                     config.estrategiaDeRecalculo(),
-                    config.estrategiaDeCriacao(),
-                    config.estrategiaDeDistribuicao()
+                    config.estrategiaDeCriacao()
+
                 );
         // 5. Comanda a carteira para se popular.
         novaCarteira.gerarCronogramaAPartirDeComandos(comando.parcelas());

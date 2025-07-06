@@ -1,5 +1,7 @@
 package org.com.pangolin.dominio.vo;
 
+import org.com.pangolin.dominio.enums.TipoDistribuicaoAmortizacaoEnum;
+
 import java.time.LocalDate;
 
 /**
@@ -9,5 +11,5 @@ import java.time.LocalDate;
 public record Pagamento(
         ValorMonetario valor,
         LocalDate data,
-        String metodo // Ex: "PIX", "BOLETO"
+        TipoDistribuicaoAmortizacaoEnum tipoDistribuicaoAmortizacao // Ex: "PIX", "BOLETO"
 ) {}

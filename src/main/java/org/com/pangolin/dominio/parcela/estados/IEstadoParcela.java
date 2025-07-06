@@ -40,4 +40,23 @@ public interface IEstadoParcela {
 
     /** Retorna o valor do Enum correspondente, para persistência e consulta. */
     StatusParcelaEnum status();
+
+    /**
+     * Determina o contexto temporal da parcela em relação a uma data.
+     * <p>VENCIDA: Quando a data de referência é após a data de vencimento da parcela.</p>
+     * <p>ANTECIPADA: Quando a data de vencimento da parcela é após a data de referência.</p>
+     * <p>EM_DIA: Quando a data de vencimento é igual à data de referência.</p>
+     * @param parcela O contexto da parcela com sua data de vencimento.
+     * @param dataDeReferencia A data da operação (normalmente "hoje").
+     * @return O ContextoTemporal correspondente.
+     */
+    default ContextoTemporal contextoTemporal(Parcela parcela, LocalDate dataDeReferencia) {
+        if (dataDeReferencia.isAfter(parcela.dataVencimento())) {
+            return ContextoTemporal.VENCIDA;
+        }
+        if (parcela.dataVencimento().isAfter(dataDeReferencia)) {
+            return ContextoTemporal.ANTECIPADA;
+        }
+        return ContextoTemporal.EM_DIA;
+    }
 }
