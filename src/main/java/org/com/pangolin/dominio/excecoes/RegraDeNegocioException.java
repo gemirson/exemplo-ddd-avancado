@@ -7,11 +7,25 @@ package org.com.pangolin.dominio.excecoes;
  */
 public class RegraDeNegocioException extends RuntimeException {
 
-    public RegraDeNegocioException(String mensagem) {
-        super(mensagem);
+    private final ICodigoDeErro codigoDeErro;
+
+    public RegraDeNegocioException(ICodigoDeErro codigoDeErro, Object... args) {
+        // Formata a mensagem padrão com os argumentos fornecidos.
+        super(String.format(codigoDeErro.mensagemPadrao(), args));
+        this.codigoDeErro = codigoDeErro;
     }
 
-    public RegraDeNegocioException(String mensagem, Throwable causa) {
+    public RegraDeNegocioException(String mensagem, ICodigoDeErro codigoDeErro) {
+        super(mensagem);
+        this.codigoDeErro = codigoDeErro;
+    }
+
+    public RegraDeNegocioException(String mensagem, Throwable causa, ICodigoDeErro codigoDeErro) {
         super(mensagem, causa);
+        this.codigoDeErro = codigoDeErro;
+    }
+
+    public ICodigoDeErro codigoDeErro() {
+        return codigoDeErro;
     }
 }
