@@ -1,6 +1,6 @@
 package org.com.pangolin.dominio.servicos.amortizacoes;
 
-import org.com.pangolin.dominio.comuns.OrdensAmortizacao;
+import org.com.pangolin.dominio.comuns.OrdensDeAmortizacao;
 import org.com.pangolin.dominio.enums.TipoDistribuicaoAmortizacaoEnum;
 import org.com.pangolin.dominio.parcela.componentes.TipoComponente;
 import org.com.pangolin.dominio.parcela.estados.ContextoTemporal;
@@ -12,16 +12,16 @@ public class SeletorDeOrdemDeAmortizacao {
     // O "livro de regras" do negócio.
     private static final Map<ContextoTemporal, Map<TipoDistribuicaoAmortizacaoEnum,List<TipoComponente>>> REGRAS_DE_ORDEM_AMORTIZACAO= Map.of(
             ContextoTemporal.EM_DIA, Map.of(
-                    TipoDistribuicaoAmortizacaoEnum.PARCIAL, OrdensAmortizacao.ORDEM_AMORTIZACAO_PARCIAL_EM_DIA,
-                    TipoDistribuicaoAmortizacaoEnum.INTEGRAL, OrdensAmortizacao.ORDEM_AMORTIZACAO_INTEGRAL_EM_DIA
+                    TipoDistribuicaoAmortizacaoEnum.PARCIAL, OrdensDeAmortizacao.ORDEM_AMORTIZACAO_PARCIAL_EM_DIA,
+                    TipoDistribuicaoAmortizacaoEnum.INTEGRAL, OrdensDeAmortizacao.ORDEM_AMORTIZACAO_INTEGRAL_EM_DIA
             ),
             ContextoTemporal.VENCIDA, Map.of(
-                    TipoDistribuicaoAmortizacaoEnum.PARCIAL, OrdensAmortizacao.ORDEM_AMORTIZACAO_PARCIAL_VENCIDA,
-                    TipoDistribuicaoAmortizacaoEnum.INTEGRAL, OrdensAmortizacao.ORDEM_AMORTIZACAO_INTEGRAL_VENCIDA
+                    TipoDistribuicaoAmortizacaoEnum.PARCIAL, OrdensDeAmortizacao.ORDEM_AMORTIZACAO_PARCIAL_VENCIDA,
+                    TipoDistribuicaoAmortizacaoEnum.INTEGRAL, OrdensDeAmortizacao.ORDEM_AMORTIZACAO_INTEGRAL_VENCIDA
             ),
             ContextoTemporal.ANTECIPADA, Map.of(
-                    TipoDistribuicaoAmortizacaoEnum.PARCIAL, OrdensAmortizacao.ORDEM_AMORTIZACAO_PARCIAL_ANTECIPADA,
-                    TipoDistribuicaoAmortizacaoEnum.INTEGRAL, OrdensAmortizacao.ORDEM_AMORTIZACAO_INTEGRAL_ANTECIPADA
+                    TipoDistribuicaoAmortizacaoEnum.PARCIAL, OrdensDeAmortizacao.ORDEM_AMORTIZACAO_PARCIAL_ANTECIPADA,
+                    TipoDistribuicaoAmortizacaoEnum.INTEGRAL, OrdensDeAmortizacao.ORDEM_AMORTIZACAO_INTEGRAL_ANTECIPADA
             )
     );
 
@@ -35,8 +35,8 @@ public class SeletorDeOrdemDeAmortizacao {
         return REGRAS_DE_ORDEM_AMORTIZACAO.getOrDefault(
                 contexto,
                 Map.of(
-                    TipoDistribuicaoAmortizacaoEnum.PARCIAL, OrdensAmortizacao.ORDEM_AMORTIZACAO_PARCIAL_EM_DIA,
-                    TipoDistribuicaoAmortizacaoEnum.INTEGRAL, OrdensAmortizacao.ORDEM_AMORTIZACAO_INTEGRAL_EM_DIA
+                    TipoDistribuicaoAmortizacaoEnum.PARCIAL, OrdensDeAmortizacao.ORDEM_AMORTIZACAO_PARCIAL_EM_DIA,
+                    TipoDistribuicaoAmortizacaoEnum.INTEGRAL, OrdensDeAmortizacao.ORDEM_AMORTIZACAO_INTEGRAL_EM_DIA
                 )
         );
     }

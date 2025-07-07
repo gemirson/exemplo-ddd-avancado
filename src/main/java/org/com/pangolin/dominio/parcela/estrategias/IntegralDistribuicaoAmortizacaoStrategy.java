@@ -7,26 +7,31 @@ import org.com.pangolin.dominio.parcela.componentes.amortizacoes.AmortizacaoComp
 import org.com.pangolin.dominio.parcela.componentes.amortizacoes.AmortizacaoComponenteMoraContabilHandler;
 import org.com.pangolin.dominio.parcela.componentes.amortizacoes.AmortizacaoComponentePrincipalHandler;
 import org.com.pangolin.dominio.parcela.componentes.amortizacoes.IComponenteAmortizacaoHandler;
+import org.com.pangolin.dominio.parcela.estrategias.etapas.AmortizacaoSimplesStep;
+import org.com.pangolin.dominio.parcela.estrategias.etapas.IAmortizacaoStep;
+import org.com.pangolin.dominio.parcela.estrategias.etapas.IAmortizacaoStepFactory;
 import org.com.pangolin.dominio.vo.DetalheAplicacaoComponente;
 import org.com.pangolin.dominio.vo.Pagamento;
 import org.com.pangolin.dominio.vo.ValorMonetario;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class IntegralDistribuicaoAmortizacaoStrategy implements IEstrategiaDeDistribuicaoDeAmortizacao {
 
-    private static final TipoComponente[] ORDEM_AMORTIZACAO_INTEGRAL = {
-            TipoComponente.PRINCIPAL,
-            TipoComponente.JUROS,
-            TipoComponente.MULTA,
-            TipoComponente.TAXA
-    };
-
+    private final List<IAmortizacaoStep> sequenciaDeEtapas;
     private final Map<TipoComponente, IComponenteAmortizacaoHandler>  registroDeHandlersAmortizacao;
-    private final List<TipoComponente> ordemAmortizacaoIntegral;
 
-    public IntegralDistribuicaoAmortizacaoStrategy(List<TipoComponente> ordemAmortizacaoIntegral){
-        this.ordemAmortizacaoIntegral = ordemAmortizacaoIntegral;
+
+    public IntegralDistribuicaoAmortizacaoStrategy(
+            List<IAmortizacaoStepFactory> receitaDeEtapas,
+            Map<TipoComponente, IComponenteAmortizacaoHandler> registroDeHandlers){
+        // A lógica de construção das etapas agora reside aqui dentro.
+        // Ele usa a ordem para montar sua sequência interna de comandos.
+        // A lógica de construção itera sobre as fábricas e manda cada uma criar sua etapa.
+        this.sequenciaDeEtapas = receitaDeEtapas.stream()
+                .map(fabrica -> fabrica.criar(registroDeHandlers))
+                .collect(Collectors.toList());
         this.registroDeHandlersAmortizacao = new EnumMap<>(TipoComponente.class);
 
         // Registra os handlers de amortização para cada tipo de componente
@@ -48,40 +53,11 @@ public class IntegralDistribuicaoAmortizacaoStrategy implements IEstrategiaDeDis
         ValorMonetario valorRestante = pagamento.valor();
         List<DetalheAplicacaoComponente> detalhes = new ArrayList<>();
 
-
-        // ... Lógica para ordenar os componentes ...
-
-        for (TipoComponente tipo : ordemAmortizacaoIntegral) {
-
+        // O ALGORITMO PRINCIPAL É UMA SIMPLES ITERAÇÃO DE COMANDOS!
+        for (IAmortizacaoStep etapa : this.sequenciaDeEtapas) {
             if (valorRestante.isZero()) break;
-
-            ComponenteFinanceiro componenteAtual = (ComponenteFinanceiro) componentes.get(tipo);
-            if (tipo == null) continue;
-
-            // 1. Encontra o handler especialista para o tipo atual.
-            IComponenteAmortizacaoHandler handler = registroDeHandlersAmortizacao.get(tipo);
-            if (handler == null) continue; // Ou lança exceção para tipo não mapeado
-
-            // 2. Pergunta ao handler se as pré-condições foram satisfeitas.
-            if (handler.preCondicoesSatisfeitas(componentes)) {
-                // 3. Comanda o handler para executar a amortização.
-                // Chama o método de cálculo puro
-                Optional<DetalheAplicacaoComponente> detalheOpt = handler.calcularAplicacao(
-                        componenteAtual,
-                        valorRestante,
-                        componentes
-                );
-
-                if (detalheOpt.isPresent()) {
-                    DetalheAplicacaoComponente detalhe = detalheOpt.get();
-                    detalhes.add(detalhe);
-                    // Atualiza o valor restante do pagamento para o próximo handler.
-                    valorRestante = valorRestante.subtrair(detalhe.valorAplicado());
-                }
-            }
-
+            valorRestante = etapa.executar(valorRestante, componentes, detalhes);
         }
-
         return new ResultadoDistribuicao(detalhes, valorRestante);
     }
 
