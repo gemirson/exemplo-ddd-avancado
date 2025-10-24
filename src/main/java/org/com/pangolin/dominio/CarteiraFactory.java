@@ -11,6 +11,7 @@ import org.com.pangolin.dominio.parcela.Parcela;
 import org.com.pangolin.dominio.parcela.ParcelaId;
 import org.com.pangolin.dominio.parcela.componentes.ComponenteFinanceiro;
 
+import org.com.pangolin.dominio.parcela.componentes.MascaraDeComponentes;
 import org.com.pangolin.dominio.parcela.componentes.TipoComponente;
 import org.com.pangolin.dominio.parcela.componentes.amortizacoes.AmortizacaoComponenteCorrecaoMonetariaHandler;
 import org.com.pangolin.dominio.parcela.componentes.amortizacoes.AmortizacaoComponenteMoraContabilHandler;
@@ -60,6 +61,17 @@ public class CarteiraFactory {
         this.registroDeHandlers.put(TipoComponente.MORA_CONTABIL, new AmortizacaoComponenteMoraContabilHandler());
         this.registroDeHandlers.put(TipoComponente.PRINCIPAL, new AmortizacaoComponentePrincipalHandler());
 
+// --- DEFINIÇÃO DECLARATIVA DOS ESCOPOS ---
+        // A regra "Parcial remove MULTA e TAXA" é implementada aqui.
+        MascaraDeComponentes escopoParcialPadrao = MascaraDeComponentes.TODOS
+                .remover(TipoComponente.MULTA)
+                .remover(TipoComponente.TAXA);
+
+        // A regra "Integral inclui tudo".
+        MascaraDeComponentes escopoIntegralPadrao = MascaraDeComponentes.TODOS;
+
+
+
 
 
         // Montamos o livro de receitas uma única vez.
@@ -83,6 +95,24 @@ public class CarteiraFactory {
         mapaDeConfiguracoes.put(
                 TipoProdutoEnum.POS_FIXADO_DISTRIBUICAO_PARCIAL,
                 new ConfiguracaoDeProduto(stratCriacaoPos,  stratRecalculoPrice)
+        );
+
+        mapaDeConfiguracoes.put(
+                TipoProdutoEnum.PRE_FIXADO_PADRAO,
+                new ConfiguracaoDeProduto(
+                        stratCriacaoPre,
+                        // As políticas disponíveis
+                        Map.of(
+                                TipoPoliticaDistribuicao.PARCIAL_JUROS_PRIMEIRO, stratParcialJurosPrimeiro,
+                                TipoPoliticaDistribuicao.INTEGRAL_JUROS_PRIMEIRO, stratIntegralJurosPrimeiro
+                        ),
+                        // O escopo padrão para cada política
+                        Map.of(
+                                TipoPoliticaDistribuicao.PARCIAL_JUROS_PRIMEIRO, escopoParcialPadrao,
+                                TipoPoliticaDistribuicao.INTEGRAL_JUROS_PRIMEIRO, escopoIntegralPadrao
+                        ),
+                        stratRecalculoPrice
+                )
         );
 
         // Receita 4: Pós-Fixado com distribuição Integral
