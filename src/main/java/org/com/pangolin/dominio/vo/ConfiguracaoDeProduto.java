@@ -2,7 +2,6 @@ package org.com.pangolin.dominio.vo;
 
 
 import org.com.pangolin.dominio.parcela.estrategias.IEstrategiaDeCriacaoDeParcela;
-import org.com.pangolin.dominio.parcela.estrategias.IEstrategiaDeDistribuicaoDeAmortizacao;
 import org.com.pangolin.dominio.servicos.recalculos.IRecalculoDeCronogramaStrategy;
 
 /**

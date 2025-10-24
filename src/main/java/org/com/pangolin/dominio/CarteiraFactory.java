@@ -11,10 +11,16 @@ import org.com.pangolin.dominio.parcela.Parcela;
 import org.com.pangolin.dominio.parcela.ParcelaId;
 import org.com.pangolin.dominio.parcela.componentes.ComponenteFinanceiro;
 
+import org.com.pangolin.dominio.parcela.componentes.TipoComponente;
+import org.com.pangolin.dominio.parcela.componentes.amortizacoes.AmortizacaoComponenteCorrecaoMonetariaHandler;
+import org.com.pangolin.dominio.parcela.componentes.amortizacoes.AmortizacaoComponenteMoraContabilHandler;
+import org.com.pangolin.dominio.parcela.componentes.amortizacoes.AmortizacaoComponentePrincipalHandler;
+import org.com.pangolin.dominio.parcela.componentes.amortizacoes.IComponenteAmortizacaoHandler;
 import org.com.pangolin.dominio.parcela.estrategias.*;
 
 import org.com.pangolin.dominio.servicos.IServicoCalculoEncargos;
 import org.com.pangolin.dominio.servicos.ServicoCalculoEncargos;
+import org.com.pangolin.dominio.servicos.amortizacoes.OrdemDePagamentoRepository;
 import org.com.pangolin.dominio.servicos.recalculos.IRecalculoDeCronogramaStrategy;
 import org.com.pangolin.dominio.servicos.recalculos.PriceRecalculoStrategy;
 import org.com.pangolin.dominio.vo.ConfiguracaoDeProduto;
@@ -32,11 +38,12 @@ public class CarteiraFactory {
     // As implementações concretas das estratégias podem ser injetadas aqui.
     private final IServicoCalculoEncargos servicoEncargosPadrao;
     private final IRecalculoDeCronogramaStrategy estrategiaRecalculoPrice;
-
+    private final OrdemDePagamentoRepository repositorioDeOrdens;
 
     // O "Livro de Receitas" - imutável após a construção.
     private final Map<TipoProdutoEnum, ConfiguracaoDeProduto> mapaDeConfiguracoes;
     private final Map<TipoDistribuicaoAmortizacaoEnum, IEstrategiaDeDistribuicaoDeAmortizacao> mapaDeEstrategiasDistribuicao;
+    private final Map<TipoComponente, IComponenteAmortizacaoHandler> registroDeHandlers;
 
     public CarteiraFactory(EstrategiaCriacaoPreFixada stratCriacaoPre,
                            EstrategiaCriacaoPosFixada stratCriacaoPos,
@@ -44,6 +51,15 @@ public class CarteiraFactory {
 
         this.servicoEncargosPadrao = new ServicoCalculoEncargos();
         this.estrategiaRecalculoPrice = new PriceRecalculoStrategy();
+        this.repositorioDeOrdens = new OrdemDePagamentoRepository();
+
+        // --- 1. MONTAR O REGISTRO CENTRAL DE HANDLERS ---
+        // Este mapa é o único lugar que conhece todos os handlers disponíveis.
+        this.registroDeHandlers = new EnumMap<>(TipoComponente.class);
+        this.registroDeHandlers.put(TipoComponente.CORRECAO_MONETARIA, new AmortizacaoComponenteCorrecaoMonetariaHandler());
+        this.registroDeHandlers.put(TipoComponente.MORA_CONTABIL, new AmortizacaoComponenteMoraContabilHandler());
+        this.registroDeHandlers.put(TipoComponente.PRINCIPAL, new AmortizacaoComponentePrincipalHandler());
+
 
 
         // Montamos o livro de receitas uma única vez.
@@ -83,7 +99,7 @@ public class CarteiraFactory {
         if (comando.parcelas().size() > 999) {
             // A falha ocorre no ponto mais cedo possível, com uma mensagem clara
             // sobre a regra de negócio do agregado.
-            throw new RegraDeNegocioException("Um contrato não pode ter mais de 999 parcelas.");
+           // throw new RegraDeNegocioException("Um contrato não pode ter mais de 999 parcelas.");
             // Usar uma exceção customizada é ainda melhor que IllegalArgumentException.
         }
 
@@ -92,7 +108,7 @@ public class CarteiraFactory {
 
         // 2. Validação: se não há receita para este tipo, é um produto inválido.
         if (config == null) {
-            throw new RegraDeNegocioException("Tipo de produto desconhecido ou inválido: " + comando.tipoProduto());
+          //  throw new RegraDeNegocioException("Tipo de produto desconhecido ou inválido: " + comando.tipoProduto());
         }
 
         System.out.println("LOG: Usando configuração para " + comando.tipoProduto());
@@ -106,7 +122,8 @@ public class CarteiraFactory {
                     CarteiraId.of(comando.id().toString()),
                     servicoEncargosPadrao,
                     config.estrategiaDeRecalculo(),
-                    config.estrategiaDeCriacao()
+                    config.estrategiaDeCriacao(),
+                    repositorioDeOrdens
 
                 );
         // 5. Comanda a carteira para se popular.

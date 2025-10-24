@@ -1,6 +1,6 @@
 package org.com.pangolin.dominio.parcela.estrategias.etapas;
 
-import org.com.pangolin.dominio.parcela.componentes.ComponenteFinanceiro;
+
 import org.com.pangolin.dominio.parcela.componentes.IComponenteFinanceiroLeitura;
 import org.com.pangolin.dominio.parcela.componentes.TipoComponente;
 import org.com.pangolin.dominio.vo.DetalheAplicacaoComponente;

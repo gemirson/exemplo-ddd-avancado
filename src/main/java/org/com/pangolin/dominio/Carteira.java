@@ -12,7 +12,9 @@ import org.com.pangolin.dominio.parcela.estados.ContextoTemporal;
 import org.com.pangolin.dominio.parcela.estrategias.IEstrategiaDeCriacaoDeParcela;
 import org.com.pangolin.dominio.parcela.estrategias.IEstrategiaDeDistribuicaoDeAmortizacao;
 import org.com.pangolin.dominio.parcela.estrategias.ProvedorDeEstrategiaDeDistribuicaoAmortizacoes;
+import org.com.pangolin.dominio.parcela.estrategias.etapas.IAmortizacaoStepFactory;
 import org.com.pangolin.dominio.servicos.IServicoCalculoEncargos;
+import org.com.pangolin.dominio.servicos.amortizacoes.OrdemDePagamentoRepository;
 import org.com.pangolin.dominio.servicos.recalculos.IRecalculoDeCronogramaStrategy;
 import org.com.pangolin.dominio.servicos.amortizacoes.SeletorDeOrdemDeAmortizacao;
 import org.com.pangolin.dominio.vo.Pagamento;
@@ -42,6 +44,7 @@ public class Carteira extends Entidade<String, CarteiraId> implements Serializab
 
     // A ESTRATÉGIA DE DISTRIBUIÇÃO AGORA É UMA POLÍTICA DE PRIMEIRA CLASSE
     private  IEstrategiaDeDistribuicaoDeAmortizacao estrategiaDeDistribuicao;
+    private final  OrdemDePagamentoRepository repositorioDeOrdens;
 
 
     /**
@@ -54,8 +57,9 @@ public class Carteira extends Entidade<String, CarteiraId> implements Serializab
     protected Carteira(CarteiraId id,
                        IServicoCalculoEncargos servicoEncargos,
                        IRecalculoDeCronogramaStrategy estrategiaDeRecalculo,
-                       IEstrategiaDeCriacaoDeParcela estrategiaDeCriacaoDeParcela) {
+                       IEstrategiaDeCriacaoDeParcela estrategiaDeCriacaoDeParcela, OrdemDePagamentoRepository repositorioDeOrdens) {
         super(id);
+        this.repositorioDeOrdens = repositorioDeOrdens;
         this.parcelas = new ArrayList<>();
         this.servicoEncargos = servicoEncargos;
         this.estrategiaDeCriacaoDeParcela = estrategiaDeCriacaoDeParcela;
@@ -99,7 +103,9 @@ public class Carteira extends Entidade<String, CarteiraId> implements Serializab
 
         Map<TipoDistribuicaoAmortizacaoEnum,List<TipoComponente>> ordensAmortizacoes =  SeletorDeOrdemDeAmortizacao.selecionarOrdemAmortizacaoParaContexto(contexto);
 
-        List<TipoComponente> ordenAmortizacao = ordensAmortizacoes.get(pagamento.tipoDistribuicaoAmortizacao());
+        List<TipoComponente> ordemFinal = ordensAmortizacoes.get(pagamento.tipoDistribuicaoAmortizacao());
+
+        List<IAmortizacaoStepFactory> receitaDeEtapas = this.repositorioDeOrdens.obterReceitaPara(ordemFinal);
 
         IEstrategiaDeDistribuicaoDeAmortizacao estrategiaDeDistribuicao = provedorDeEstrategiaDeDistribuicaoAmortizacoes.obterEstrategia(pagamento.tipoDistribuicaoAmortizacao(),ordenAmortizacao);
 
@@ -109,7 +115,7 @@ public class Carteira extends Entidade<String, CarteiraId> implements Serializab
         MemorialDeAmortizacao memorial = parcelaAlvo.pagar(pagamento, estrategiaDeDistribuicao, dataDeReferencia);
 
         // 3. Inspeciona o resultado para decidir se um recálculo é necessário.
-        // A regra de negócio é: se o principal foi amortizado, o cronograma deve ser recalculado.
+        // A regra de negócio é: se o principal foi amortizado, o cronograma deve ser  this.repositorioDeOrdens = new OrdemDePagamentoRepository();recalculado.
         boolean principalFoiAmortizado = memorial.detalhes().stream()
                 .anyMatch(detalhesPorComponente -> detalhesPorComponente.tipo() == TipoComponente.PRINCIPAL && detalhesPorComponente.valorAplicado().isPositivo());
 
